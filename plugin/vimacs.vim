@@ -382,18 +382,14 @@ inoremap <C-x><C-u> <C-o>u
 " Incremental Searching and Query Replace
 "
 
-inoremap <C-s> <C-o>:call <SID>StartSearch('/')<CR><C-o>/
-inoremap <C-r> <C-o>:call <SID>StartSearch('?')<CR><C-o>?
 inoremap <M-n> <C-o>:cnext<CR>
 " <M-n> not in Emacs: next in QuickFix
 inoremap <M-p> <C-o>:cprevious<CR>
 " <M-p> not in Emacs: previous in QuickFix
-inoremap <C-M-s> <C-o>:call <SID>StartSearch('/')<CR><C-o>/
-inoremap <C-M-r> <C-o>:call <SID>StartSearch('?')<CR><C-o>?
 inoremap <M-s> <C-o>:set invhls<CR>
 inoremap <M-%> <C-o>:call <SID>QueryReplace()<CR>
 inoremap <C-M-%> <C-o>:call <SID>QueryReplaceRegexp()<CR>
-cnoremap <C-r> <CR><C-o>?<Up>
+
 
 command! QueryReplace :call <SID>QueryReplace()<CR>
 command! QueryReplaceRegexp :call <SID>QueryReplaceRegexp()<CR>
@@ -412,89 +408,6 @@ command! QueryReplaceRegexp :call <SID>QueryReplaceRegexp()<CR>
 " Note that <C-c> in Emacs is functionally the same as <CR>.
 
 LetDefault g:VM_SearchRepeatHighlight 0
-
-function! <SID>StartSearch(search_dir)
-  let s:incsearch_status = &incsearch
-  let s:lazyredraw_status = &lazyredraw
-  let s:hit_boundary = 0
-  set nowrapscan
-  set incsearch
-  set lazyredraw
-  cmap <C-c> <CR>
-  cnoremap <C-s> <C-c><C-o>:call <SID>SearchAgain()<CR><C-o>/<Up>
-  cnoremap <C-r> <C-c><C-o>:call <SID>SearchAgain()<CR><C-o>?<Up>
-  cnoremap <silent> <CR> <CR><C-o>:call <SID>StopSearch()<CR>
-  cnoremap <silent> <C-g> <C-c><C-o>:call <SID>AbortSearch()<CR>
-  cnoremap <silent> <Esc> <C-c><C-o>:call <SID>AbortSearch()<CR>
-  if a:search_dir == '/'
-    cnoremap <M-s> <CR><C-o>:set invhls<CR><Left><C-o>/<Up>
-  else
-    cnoremap <M-s> <CR><C-o>:set invhls<CR><Left><C-o>?<Up>
-  endif
-  let s:before_search_mark = <SID>Mark()
-endfunction
-
-function! <SID>StopSearch()
-  cunmap <C-c>
-  cunmap <C-s>
-  cunmap <C-r>
-  cunmap <CR>
-  cunmap <C-g>
-  cnoremap <C-g> <C-c>
-  if exists("s:incsearch_status")
-    let &incsearch = s:incsearch_status
-    unlet s:incsearch_status
-  endif
-  if g:VM_SearchRepeatHighlight == 1
-    if exists("s:hls_status")
-      let &hls = s:hls_status
-      unlet s:hls_status
-    endif
-  endif
-endfunction
-
-function! <SID>AbortSearch()
-  call <SID>StopSearch()
-  if exists("s:before_search_mark")
-    execute s:before_search_mark
-    unlet s:before_search_mark
-  endif
-endfunction
-
-function! <SID>SearchAgain()
-  
-  "if (winline() <= 2)
-  "  normal zb
-  "elseif (( winheight(0) - winline() ) <= 2)
-  "  normal zt
-  "endif
-
-  let current_pos = <SID>Mark()
-  if search(@/, 'W') == 0
-    " FIXME
-    set wrapscan
-    if s:hit_boundary == 1
-      let s:hit_boundary = 2
-    endif
-    let s:hit_boundary = 1
-  else
-    if s:hit_boundary == 2
-      let s:hit_boundary = 0
-    endif
-    execute current_pos
-  endif
-  
-  cnoremap <C-s> <CR><C-o>:call <SID>SearchAgain()<CR><C-o>/<Up>
-  cnoremap <C-r> <CR><C-o>:call <SID>SearchAgain()<CR><C-o>?<Up>
-  
-  if g:VM_SearchRepeatHighlight == 1
-    if !exists("s:hls_status")
-      let s:hls_status = &hls
-    endif
-    set hls
-  endif
-
-endfunction
 
 " Emacs' `query-replace' functions
 
@@ -677,15 +590,11 @@ endif
 
 " Insert/Visual/Operator mode maps
 imap <C-b> <Left>
-vmap <C-b> <Left>
 omap <C-b> <Left>
 imap <C-f> <Right>
-vmap <C-f> <Right>
 omap <C-f> <Right>
-imap <C-p> <Up>
 vmap <C-p> <Up>
 omap <C-p> <Up>
-imap <C-n> <Down>
 vmap <C-n> <Down>
 omap <C-n> <Down>
 inoremap <script> <M-f> <SID>ForwardWord
